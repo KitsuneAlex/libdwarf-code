@@ -52,6 +52,7 @@
 #include "dwarf_opaque.h"
 #include "dwarf_error.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 /*  These files are included to get the sizes
     of structs for malloc.
 */
@@ -113,6 +114,58 @@ struct Dwarf_Error_s _dwarf_failsafe_error = {
     0,
     1
 };
+
+/*  Use system memory allocator as default
+    memory allocator. */
+static struct Dwarf_Allocator_s _dwarf_allocator = {
+    malloc,
+    realloc,
+    free
+};
+
+/*  Defined March 28th 2024. Allows a caller to
+    set the memory allocator used by libdwarf internally. */
+int dwarf_set_allocator(const Dwarf_Allocator* allocator)
+{
+    if(allocator == NULL)
+    {
+        return DW_DLV_ERROR;
+    }
+    _dwarf_allocator = *allocator;
+    return DW_DLV_OK;
+}
+
+/*  Defined March 28th 2024. Allows a caller to
+    retrieve a pointer to the memory allocator
+    used by libdwarf internally. */
+const Dwarf_Allocator* dwarf_get_allocator()
+{
+    return &_dwarf_allocator;
+}
+
+/*  Defined March 28th 2024. Internal function for
+    allocating heap memory.
+    Declarations in dwarf_alloc_private.h. */
+void* dwarf_alloc(const Dwarf_Unsigned size)
+{
+    return _dwarf_allocator.alloc_callback(size);
+}
+
+/*  Defined March 28th 2024. Internal function for
+    reallocating heap memory.
+    Declarations in dwarf_alloc_private.h. */
+void* dwarf_realloc(void* memory, const Dwarf_Unsigned size)
+{
+    return _dwarf_allocator.realloc_callback(memory, size);
+}
+
+/*  Defined March 28th 2024. Internal function for
+    freeing heap memory.
+    Declarations in dwarf_alloc_private.h. */
+void dwarf_free(void* memory)
+{
+    _dwarf_allocator.free_callback(memory);
+}
 
 /*  If non-zero (the default) de_alloc_tree (see dwarf_alloc.c)
     is used normally.  If zero then dwarf allocations

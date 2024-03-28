@@ -14,6 +14,7 @@ dwarf_abbrev.c \
 dwarf_abbrev.h \
 dwarf_alloc.c \
 dwarf_alloc.h \
+dwarf_alloc_private.h \
 dwarf_arange.c \
 dwarf_arange.h \
 dwarf_base_types.h \

@@ -567,6 +567,32 @@ typedef struct Dwarf_Regtable3_s {
     struct Dwarf_Regtable_Entry3_s * rt3_rules;
 } Dwarf_Regtable3;
 
+/*! @typedef Dwarf_Allocator_Alloc_Callback
+    A pointer to a function used by libdwarf to allocate its memory.
+ */
+typedef void*(*Dwarf_Allocator_Alloc_Callback)(Dwarf_Unsigned size);
+
+/*! @typedef Dwarf_Allocator_Realloc_Callback
+    A pointer to a function used by libdwarf to reallocate its memory.
+ */
+typedef void*(*Dwarf_Allocator_Realloc_Callback)(void* memory, Dwarf_Unsigned size);
+
+/*! @typedef Dwarf_Allocator_Free_Callback
+    A pointer to a function used by libdwarf to free its memory.
+ */
+typedef void(*Dwarf_Allocator_Free_Callback)(void* memory);
+
+/*! @typedef Dwarf_Allocator
+    This struct provides a way for applications
+    to define a custom memory allocator that is
+    used by libdwarf internally.
+ */
+typedef struct Dwarf_Allocator_s {
+    Dwarf_Allocator_Alloc_Callback alloc_callback;
+    Dwarf_Allocator_Realloc_Callback realloc_callback;
+    Dwarf_Allocator_Free_Callback free_callback;
+} Dwarf_Allocator;
+
 /* Opaque types for Consumer Library. */
 /*! @typedef Dwarf_Error
 
@@ -1464,6 +1490,16 @@ typedef struct Dwarf_Rnglists_Head_s * Dwarf_Rnglists_Head;
 #define DW_DLE_LAST        503
 #define DW_DLE_LO_USER     0x10000
 /*! @} */
+
+/*! @section allocator Memory allocator functions */
+
+/*! @brief Set the memory allocator used by libdwarf internally.
+ */
+DW_API int dwarf_set_allocator(const Dwarf_Allocator* allocator);
+
+/*! @brief Retrieve a pointer to the memory allocator used by libdwarf internally.
+ */
+DW_API const Dwarf_Allocator* dwarf_get_allocator();
 
 /*! @section initfinish Initialization And Finish Operations */
 

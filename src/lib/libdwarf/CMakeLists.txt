@@ -40,7 +40,7 @@ dwarf_xu_index.c
 dwarf_print_lines.c )
 
 set_source_group(HEADERS "Header Files" dwarf.h dwarf_abbrev.h
-dwarf_alloc.h dwarf_arange.h dwarf_base_types.h
+dwarf_alloc.h dwarf_alloc_private.h dwarf_arange.h dwarf_base_types.h
 dwarf_debugaddr.h
 dwarf_debuglink.h dwarf_die_deliv.h
 dwarf_debugnames.h dwarf_dsc.h
