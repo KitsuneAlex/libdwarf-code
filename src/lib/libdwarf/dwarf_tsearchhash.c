@@ -71,6 +71,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_tsearch.h"
 
 /*  A table of primes used to size  and resize the hash table.
@@ -201,7 +202,7 @@ dwarf_initialize_search_hash( void **treeptr,
         prime_to_use = primes[k];
         if (prime_to_use == 0) {
             /* Oops. Too large. */
-            free(base);
+            _dwarf_free(base);
             return NULL;
         }
         entry_index = k;
@@ -214,7 +215,7 @@ printf("debugging: initial alloc prime to use %lu\n",prime_to_use);
     base->allowed_fill_ = calculate_allowed_fill(allowed_fill_percent,
         prime_to_use);
     if (base->allowed_fill_< (base->tablesize_/2)) {
-        free(base);
+        _dwarf_free(base);
         /* Oops. We are in trouble. Coding mistake here.  */
         return NULL;
     }
@@ -225,7 +226,7 @@ printf("debugging: initial alloc prime to use %lu\n",prime_to_use);
     base->hashfunc_ = hashfunc;
     base->hashtab_ = calloc(sizeof(struct ts_entry),base->tablesize_);
     if (!base->hashtab_) {
-        free(base);
+        _dwarf_free(base);
         return NULL;
     }
     *treeptr = base;
@@ -330,7 +331,7 @@ allocate_ts_entry(const void *key)
 {
     struct ts_entry *e =  0;
 
-    e = (struct ts_entry *) malloc(sizeof(struct ts_entry));
+    e = (struct ts_entry *) _dwarf_alloc(sizeof(struct ts_entry));
     if (!e) {
         return NULL;
     }
@@ -373,7 +374,7 @@ resize_table(struct hs_base *head,
     if (!newhead.hashtab_) {
         /*  Oops, too large. Leave table size as is, though
             things will get slow as it overfills. */
-        free(newhead.hashtab_);
+        _dwarf_free(newhead.hashtab_);
         return;
     }
     {
@@ -417,14 +418,14 @@ printf("debugging: Resize %lu to %lu\n",tsize,prime_to_use);
             }
         }
         if (fillnewfail) {
-            free(newhead.hashtab_);
+            _dwarf_free(newhead.hashtab_);
             return;
         }
     }
     /* Now get rid of the chain entries of the old table. */
     _dwarf_tdestroy_inner(head,0);
     /* Now get rid of the old table itself. */
-    free(head->hashtab_);
+    _dwarf_free(head->hashtab_);
     head->hashtab_ = 0;
     *head = newhead;
     return;
@@ -587,7 +588,7 @@ dwarf_tdelete(const void *key, void **rootp,
             /*  We free our storage. It would be up
                 to caller to do a tfind to find
                 a record and delete content if necessary. */
-            free(found);
+            _dwarf_free(found);
             return (void *)&(parentp->keyptr);
         }
         /* So found is the head of a chain. */
@@ -596,7 +597,7 @@ dwarf_tdelete(const void *key, void **rootp,
                 up the chain entry. */
             struct ts_entry *pullup = found->next;
             *found = *pullup;
-            free(pullup);
+            _dwarf_free(pullup);
             head->record_count_--;
             return (void *)&(found->keyptr);
         } else {
@@ -681,7 +682,7 @@ _dwarf_tdestroy_inner(struct hs_base*h,
             --h->record_count_;
             prev = n;
             n = n->next;
-            free(prev);
+            _dwarf_free(prev);
         }
     }
 }
@@ -703,6 +704,6 @@ dwarf_tdestroy(void *rootp, void (*free_node)(void *nodep))
     }
     root = head->hashtab_;
     _dwarf_tdestroy_inner(head,free_node);
-    free(root);
-    free(head);
+    _dwarf_free(root);
+    _dwarf_free(head);
 }

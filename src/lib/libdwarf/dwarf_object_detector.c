@@ -38,6 +38,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_memcpy_swap.h"
@@ -762,7 +763,7 @@ _dwarf_debuglink_finder_newpath(
         dbg = 0;
         return DW_DLV_NO_ENTRY;
     }
-    free(paths);
+    _dwarf_free(paths);
     paths = 0;
 
     if (!_dwarf_get_suppress_debuglink_crc() &&crc_in && !crc) {
@@ -771,7 +772,7 @@ _dwarf_debuglink_finder_newpath(
         res1 = dwarf_crc32(dbg,lcrc,&error);
         if (res1 == DW_DLV_ERROR) {
             paths = 0;
-            free(debuglinkfullpath);
+            _dwarf_free(debuglinkfullpath);
             dwarf_dealloc_error(dbg,error);
             dwarf_finish(dbg);
             error = 0;
@@ -784,7 +785,7 @@ _dwarf_debuglink_finder_newpath(
             crc=&newcrc[0];
         }
     }
-    free(debuglinkfullpath);
+    _dwarf_free(debuglinkfullpath);
     didmatch = match_buildid(
         /* This is about the executable */
         crc_in,buildid_len_in,buildid_in,
@@ -905,8 +906,8 @@ _dwarf_debuglink_finder_internal(
             pa,crc,buildid_length, buildid,
             m,fd_out);
         if (res == DW_DLV_OK) {
-            free(debuglinkfullpath);
-            free(paths);
+            _dwarf_free(debuglinkfullpath);
+            _dwarf_free(paths);
             paths = 0;
             dwarf_finish(dbg);
             return DW_DLV_OK;
@@ -914,8 +915,8 @@ _dwarf_debuglink_finder_internal(
         *errcode = 0;
         continue;
     }
-    free(debuglinkfullpath);
-    free(paths);
+    _dwarf_free(debuglinkfullpath);
+    _dwarf_free(paths);
     paths = 0;
     dwarf_finish(dbg);
     return DW_DLV_NO_ENTRY;

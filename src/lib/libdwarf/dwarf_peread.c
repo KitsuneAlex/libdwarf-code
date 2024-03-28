@@ -41,6 +41,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_safe_strcpy.h"
 #include "dwarf_opaque.h"
@@ -393,7 +394,7 @@ pe_load_section (void *obj, Dwarf_Unsigned section_index,
             in the section were not written to disc.
             Malloc enough for the whole section, read in
             the bytes we have. */
-        sp->loaded_data = malloc((size_t)sp->VirtualSize);
+        sp->loaded_data = _dwarf_alloc((size_t)sp->VirtualSize);
         if (!sp->loaded_data) {
             *error = DW_DLE_ALLOC_FAIL;
             return DW_DLV_ERROR;
@@ -404,7 +405,7 @@ pe_load_section (void *obj, Dwarf_Unsigned section_index,
             pep->pe_filesize,
             error);
         if (res != DW_DLV_OK) {
-            free(sp->loaded_data);
+            _dwarf_free(sp->loaded_data);
             sp->loaded_data = 0;
             return res;
         }
@@ -435,7 +436,7 @@ _dwarf_destruct_pe_access(
         _dwarf_closer(pep->pe_fd);
         pep->pe_fd = -1;
     }
-    free((char *)pep->pe_path);
+    _dwarf_free((char *)pep->pe_path);
     pep->pe_path = 0;
     if (pep->pe_sectionptr) {
         struct dwarf_pe_generic_image_section_header  *sp = 0;
@@ -443,21 +444,21 @@ _dwarf_destruct_pe_access(
         sp = pep->pe_sectionptr;
         for (i=0; i < pep->pe_section_count; ++i,++sp) {
             if (sp->loaded_data) {
-                free(sp->loaded_data);
+                _dwarf_free(sp->loaded_data);
                 sp->loaded_data = 0;
             }
-            free(sp->name);
+            _dwarf_free(sp->name);
             sp->name = 0;
-            free(sp->dwarfsectname);
+            _dwarf_free(sp->dwarfsectname);
             sp->dwarfsectname = 0;
         }
-        free(pep->pe_sectionptr);
+        _dwarf_free(pep->pe_sectionptr);
         pep->pe_section_count = 0;
     }
-    free(pep->pe_string_table);
+    _dwarf_free(pep->pe_string_table);
     pep->pe_string_table = 0;
-    free(pep);
-    free(aip);
+    _dwarf_free(pep);
+    _dwarf_free(aip);
     return;
 }
 
@@ -804,7 +805,7 @@ _dwarf_load_pe_sections(
             (size_t)pep->pe_string_table_size,
             pep->pe_filesize,errcode);
         if (res != DW_DLV_OK) {
-            free(pep->pe_string_table);
+            _dwarf_free(pep->pe_string_table);
             pep->pe_string_table = 0;
             return res;
         }
@@ -888,9 +889,9 @@ _dwarf_pe_object_access_internals_init(
     /*  Must malloc as _dwarf_destruct_pe_access()
         forces that due to other uses. */
     localdoas = (struct Dwarf_Obj_Access_Interface_a_s *)
-        malloc(sizeof(struct Dwarf_Obj_Access_Interface_a_s));
+        _dwarf_alloc(sizeof(struct Dwarf_Obj_Access_Interface_a_s));
     if (!localdoas) {
-        free(internals);
+        _dwarf_free(internals);
         *errcode = DW_DLE_ALLOC_FAIL;
         return DW_DLV_ERROR;
     }
@@ -930,7 +931,7 @@ _dwarf_pe_object_access_internals_init(
         localdoas = 0;
         return res;
     }
-    free(localdoas);
+    _dwarf_free(localdoas);
     localdoas = 0;
     return DW_DLV_OK;
 }
@@ -950,7 +951,7 @@ _dwarf_pe_object_access_init(
     dwarf_pe_object_access_internals_t *internals = 0;
     Dwarf_Obj_Access_Interface_a *intfc = 0;
 
-    internals = malloc(sizeof(dwarf_pe_object_access_internals_t));
+    internals = _dwarf_alloc(sizeof(dwarf_pe_object_access_internals_t));
     if (!internals) {
         *localerrnum = DW_DLE_ALLOC_FAIL;
         /* Impossible case, we hope. Give up. */
@@ -966,10 +967,10 @@ _dwarf_pe_object_access_init(
         return DW_DLV_ERROR;
     }
 
-    intfc = malloc(sizeof(Dwarf_Obj_Access_Interface_a));
+    intfc = _dwarf_alloc(sizeof(Dwarf_Obj_Access_Interface_a));
     if (!intfc) {
         /* Impossible case, we hope. Give up. */
-        free(internals);
+        _dwarf_free(internals);
         *localerrnum = DW_DLE_ALLOC_FAIL;
         return DW_DLV_ERROR;
     }

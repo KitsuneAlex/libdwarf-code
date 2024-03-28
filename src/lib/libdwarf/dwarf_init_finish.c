@@ -45,6 +45,7 @@
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_memcpy_swap.h"
@@ -373,7 +374,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
     res = _dwarf_load_section(dbg,&secdata,error);
     if (res != DW_DLV_OK) {
         if (secdata.dss_data_was_malloc) {
-            free(secdata.dss_data);
+            _dwarf_free(secdata.dss_data);
             secdata.dss_data = 0;
         }
         return res;
@@ -384,7 +385,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
     }
     if (doas->as_entrysize != 4) {
         if (secdata.dss_data_was_malloc) {
-            free(secdata.dss_data);
+            _dwarf_free(secdata.dss_data);
             secdata.dss_data = 0;
         }
         _dwarf_error(dbg,error,DW_DLE_GROUP_INTERNAL_ERROR);
@@ -414,7 +415,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
             /* Duplicates the check in READ_UNALIGNED_CK
                 so we can free allocated memory bere. */
             if (secdata.dss_data_was_malloc) {
-                free(secdata.dss_data);
+                _dwarf_free(secdata.dss_data);
                 secdata.dss_data = 0;
             }
             _dwarf_error(dbg,error,DW_DLE_GROUP_INTERNAL_ERROR);
@@ -428,7 +429,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
         if (fval != 1 && fval != 0x1000000) {
             /*  Could be corrupted elf object. */
             if (secdata.dss_data_was_malloc) {
-                free(secdata.dss_data);
+                _dwarf_free(secdata.dss_data);
                 secdata.dss_data = 0;
             }
             _dwarf_error(dbg,error,DW_DLE_GROUP_INTERNAL_ERROR);
@@ -443,7 +444,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
                 /* Duplicates the check in READ_UNALIGNED_CK
                     so we can free allocated memory bere. */
                 if (secdata.dss_data_was_malloc) {
-                    free(secdata.dss_data);
+                    _dwarf_free(secdata.dss_data);
                     secdata.dss_data = 0;
                 }
                 _dwarf_error(dbg,error,DW_DLE_GROUP_INTERNAL_ERROR);
@@ -463,7 +464,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
                     DWARF_32BIT_SIZE);
                 if (valr > section_count) {
                     if (secdata.dss_data_was_malloc) {
-                        free(secdata.dss_data);
+                        _dwarf_free(secdata.dss_data);
                         secdata.dss_data = 0;
                     }
                     _dwarf_error(dbg,error,
@@ -492,7 +493,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
                 }
                 if (resx == DW_DLV_ERROR){
                     if (secdata.dss_data_was_malloc) {
-                        free(secdata.dss_data);
+                        _dwarf_free(secdata.dss_data);
                         secdata.dss_data = 0;
                     }
                     _dwarf_error(dbg,error,err);
@@ -511,7 +512,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
                     error);
                 if (res != DW_DLV_OK) {
                     if (secdata.dss_data_was_malloc) {
-                        free(secdata.dss_data);
+                        _dwarf_free(secdata.dss_data);
                         secdata.dss_data = 0;
                     }
                     return res;
@@ -520,7 +521,7 @@ insert_sht_list_in_group_map(Dwarf_Debug dbg,
         }
     }
     if (secdata.dss_data_was_malloc) {
-        free(secdata.dss_data);
+        _dwarf_free(secdata.dss_data);
         secdata.dss_data = 0;
     }
     return DW_DLV_OK;
@@ -794,7 +795,7 @@ _dwarf_setup(Dwarf_Debug dbg, Dwarf_Error * error)
             /* groupnumber is set. Fall through */
             mapgroupnumber = groupnumber;
         } else if (res == DW_DLV_ERROR) {
-            free(sections);
+            _dwarf_free(sections);
             return res;
         } else { /* DW_DLV_NO_ENTRY */
             /* fall through, a BASE or DWO group, possibly */
@@ -805,11 +806,11 @@ _dwarf_setup(Dwarf_Debug dbg, Dwarf_Error * error)
             obj_section_index,
             &doas, &err);
         if (res == DW_DLV_NO_ENTRY){
-            free(sections);
+            _dwarf_free(sections);
             return res;
         }
         if (res == DW_DLV_ERROR){
-            free(sections);
+            _dwarf_free(sections);
             DWARF_DBG_ERROR(dbg, err, DW_DLV_ERROR);
         }
         scn_name = doas.as_name;
@@ -869,7 +870,7 @@ _dwarf_setup(Dwarf_Debug dbg, Dwarf_Error * error)
                 continue;
             }
             if (res == DW_DLV_ERROR) {
-                free(sections);
+                _dwarf_free(sections);
                 DWARF_DBG_ERROR(dbg, err, DW_DLV_ERROR);
             }
             /* No entry: new-to-us section, the normal case. */
@@ -886,7 +887,7 @@ _dwarf_setup(Dwarf_Debug dbg, Dwarf_Error * error)
                     section->ds_duperr,
                     section->ds_emptyerr);
                 if (res != DW_DLV_OK) {
-                    free(sections);
+                    _dwarf_free(sections);
                     return res;
                 }
                 sections[obj_section_index] = section->ds_secdata;
@@ -898,7 +899,7 @@ _dwarf_setup(Dwarf_Debug dbg, Dwarf_Error * error)
                 /*  We get here for relocation sections.
                     Fall through. */
             } else {
-                free(sections);
+                _dwarf_free(sections);
                 DWARF_DBG_ERROR(dbg, err, DW_DLV_ERROR);
             }
 
@@ -922,7 +923,7 @@ _dwarf_setup(Dwarf_Debug dbg, Dwarf_Error * error)
                         }
                     } else {
                         /* Something is wrong with the ELF file. */
-                        free(sections);
+                        _dwarf_free(sections);
                         DWARF_DBG_ERROR(dbg, DW_DLE_ELF_SECT_ERR,
                             DW_DLV_ERROR);
                     }
@@ -933,7 +934,7 @@ _dwarf_setup(Dwarf_Debug dbg, Dwarf_Error * error)
     }
 
     /* Free table with section information. */
-    free(sections);
+    _dwarf_free(sections);
     if (foundDwarf) {
         return DW_DLV_OK;
     }
@@ -1354,7 +1355,7 @@ do_decompress(Dwarf_Debug dbg,
         return DW_DLV_ERROR;
     }
     destlen = uncompressed_len;
-    dest = malloc(destlen);
+    dest = dwarf_alloc(destlen);
     if (!dest) {
         _dwarf_error_string(dbg, error,
             DW_DLE_ALLOC_FAIL,
@@ -1370,13 +1371,13 @@ do_decompress(Dwarf_Debug dbg,
 
         res = uncompress(dest,&dlen,src,srclen);
         if (res == Z_BUF_ERROR) {
-            free(dest);
+            _dwarf_free(dest);
             DWARF_DBG_ERROR(dbg, DW_DLE_ZLIB_BUF_ERROR, DW_DLV_ERROR);
         } else if (res == Z_MEM_ERROR) {
-            free(dest);
+            _dwarf_free(dest);
             DWARF_DBG_ERROR(dbg, DW_DLE_ALLOC_FAIL, DW_DLV_ERROR);
         } else if (res != Z_OK) {
-            free(dest);
+            _dwarf_free(dest);
             /* Probably Z_DATA_ERROR. */
             DWARF_DBG_ERROR(dbg, DW_DLE_ZLIB_DATA_ERROR,
                 DW_DLV_ERROR);
@@ -1386,7 +1387,7 @@ do_decompress(Dwarf_Debug dbg,
         size_t zsize =
             ZSTD_decompress(dest,destlen,src,srclen);
         if (zsize != destlen) {
-            free(dest);
+            _dwarf_free(dest);
             _dwarf_error_string(dbg, error,
                 DW_DLE_ZLIB_DATA_ERROR,
                 "DW_DLE_ZLIB_DATA_ERROR"

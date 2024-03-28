@@ -49,6 +49,7 @@
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_frame.h"
@@ -299,7 +300,7 @@ _dwarf_free_dfi_list(Dwarf_Frame_Instr fr)
     Dwarf_Frame_Instr next = 0;
     for ( ; cur ; cur = next) {
         next = cur->fi_next;
-        free(cur);
+        _dwarf_free(cur);
     }
 }
 #if 0 /* printlist() for debugging */
@@ -353,8 +354,8 @@ _dwarf_exec_frame_instr(Dwarf_Bool make_instr,
 #define FREELOCALMALLOC                  \
         _dwarf_free_dfi_list(ilisthead); \
         ilisthead =0;                    \
-        free(dfi); dfi = 0;              \
-        free(localregtab); localregtab = 0;
+        _dwarf_free(dfi); dfi = 0;              \
+        _dwarf_free(localregtab); localregtab = 0;
 /* SER === SIMPLE_ERROR_RETURN */
 #define SER(code)                     \
         FREELOCALMALLOC;              \
@@ -2512,7 +2513,7 @@ dwarf_get_fde_info_for_all_regs3_b(Dwarf_Fde fde,
         has_more_rows,subsequent_pc,
         error);
     if (res != DW_DLV_OK) {
-        free(reg_table_i.rt3_rules);
+        _dwarf_free(reg_table_i.rt3_rules);
         reg_table_i.rt3_rules = 0;
         _dwarf_free_fde_table(&fde_table);
         return res;
@@ -2567,7 +2568,7 @@ dwarf_get_fde_info_for_all_regs3_b(Dwarf_Fde fde,
     if (row_pc != NULL) {
         *row_pc = fde_table.fr_loc;
     }
-    free(reg_table_i.rt3_rules);
+    _dwarf_free(reg_table_i.rt3_rules);
     reg_table_i.rt3_rules = 0;
     reg_table_i.rt3_reg_table_size = 0;
     _dwarf_free_fde_table(&fde_table);
@@ -3397,7 +3398,7 @@ _dwarf_initialize_fde_table(Dwarf_Debug dbg,
 static void
 _dwarf_free_fde_table(struct Dwarf_Frame_s *fde_table)
 {
-    free(fde_table->fr_reg);
+    _dwarf_free(fde_table->fr_reg);
     fde_table->fr_reg_count = 0;
     fde_table->fr_reg = 0;
 }
@@ -3452,7 +3453,7 @@ _dwarf_frame_instr_destructor(void *f)
     Dwarf_Unsigned i = 0;
 
     for ( ; i < count ; ++i) {
-        free(head->fh_array[i]);
+        _dwarf_free(head->fh_array[i]);
         head->fh_array[i] = 0;
     }
     dwarf_dealloc(dbg,head->fh_array,DW_DLA_LIST);

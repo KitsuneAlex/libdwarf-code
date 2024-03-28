@@ -43,6 +43,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
@@ -85,7 +86,7 @@ free_loclists_chain(Dwarf_Debug dbg, Dwarf_Chain head)
     for ( ;cur; cur = next) {
         next = cur->ch_next;
         if (cur->ch_item) {
-            free(cur->ch_item);
+            _dwarf_free(cur->ch_item);
             cur->ch_item = 0;
             dwarf_dealloc(dbg,cur,DW_DLA_CHAIN);
         }
@@ -467,7 +468,7 @@ internal_load_loclists_contexts(Dwarf_Debug dbg,
         Dwarf_Loclists_Context newcontext = 0;
 
         /* sizeof the context struct, not sizeof a pointer */
-        newcontext = malloc(sizeof(*newcontext));
+        newcontext = _dwarf_alloc(sizeof(*newcontext));
         if (!newcontext) {
             free_loclists_chain(dbg,head_chain);
             _dwarf_error_string(dbg,error,
@@ -483,7 +484,7 @@ internal_load_loclists_contexts(Dwarf_Debug dbg,
             data,end_data,offset,
             newcontext,&nextoffset,error);
         if (res == DW_DLV_ERROR) {
-            free(newcontext);
+            _dwarf_free(newcontext);
             free_loclists_chain(dbg,head_chain);
             return DW_DLV_ERROR;
         }
@@ -495,7 +496,7 @@ internal_load_loclists_contexts(Dwarf_Debug dbg,
                 "DW_DLE_ALLOC_FAIL: allocating Loclists_Context"
                 " chain entry");
             free_loclists_chain(dbg,head_chain);
-            free(newcontext);
+            _dwarf_free(newcontext);
             return DW_DLV_ERROR;
         }
         curr_chain->ch_item = newcontext;
@@ -504,7 +505,7 @@ internal_load_loclists_contexts(Dwarf_Debug dbg,
         plast = &(curr_chain->ch_next);
         offset = nextoffset;
     }
-    fullarray= (Dwarf_Loclists_Context *)malloc(
+    fullarray= (Dwarf_Loclists_Context *)_dwarf_alloc(
         chainlength *sizeof(Dwarf_Loclists_Context /*pointer*/));
     if (!fullarray) {
         free_loclists_chain(dbg,head_chain);
@@ -596,10 +597,10 @@ _dwarf_dealloc_loclists_context(Dwarf_Debug dbg)
         con->lc_offsets_array = 0;
         con->lc_offset_entry_count = 0;
         con->lc_magic = 0;
-        free(con);
+        _dwarf_free(con);
         loccon[i] = 0;
     }
-    free(dbg->de_loclists_context);
+    _dwarf_free(dbg->de_loclists_context);
     dbg->de_loclists_context = 0;
     dbg->de_loclists_context_count = 0;
 }
@@ -981,7 +982,7 @@ alloc_rle_and_append_to_list(Dwarf_Debug dbg,
 {
     Dwarf_Locdesc_c e = 0;
 
-    e = malloc(sizeof(struct Dwarf_Locdesc_c_s));
+    e = _dwarf_alloc(sizeof(struct Dwarf_Locdesc_c_s));
     if (!e) {
         _dwarf_error_string(dbg, error, DW_DLE_ALLOC_FAIL,
             "DW_DLE_ALLOC_FAIL: Out of memory in "
@@ -1092,7 +1093,7 @@ build_array_of_lle(Dwarf_Debug dbg,
             prev = cur;
             array[i] = *cur;
             cur = cur->ld_next;
-            free(prev);
+            _dwarf_free(prev);
         }
         rctx->ll_first = 0;
         rctx->ll_last = 0;
@@ -1305,7 +1306,7 @@ _dwarf_free_loclists_limited_head_content(Dwarf_Loc_Head_c head)
             next = cur->ld_next;
             cur->ld_next = 0;
             cur->ld_magic = 0;
-            free(cur);
+            _dwarf_free(cur);
         }
         head->ll_first = 0;
         head->ll_last = 0;

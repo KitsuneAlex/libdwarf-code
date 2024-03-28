@@ -56,6 +56,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  */
 #include "dwarf_opaque.h"
 #include "dwarf_global.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_string.h"
@@ -333,7 +334,7 @@ dwarfstring_list_add_new(struct dwarfstring_list_s * base_entry,
 
     if (prev) {
         next = ( struct dwarfstring_list_s *)
-        malloc(sizeof(struct dwarfstring_list_s));
+        _dwarf_alloc(sizeof(struct dwarfstring_list_s));
         if (!next) {
             *errcode = DW_DLE_ALLOC_FAIL;
             return DW_DLV_ERROR;
@@ -367,7 +368,7 @@ dwarfstring_list_destructor(struct dwarfstring_list_s *l)
         nextl = curl->dl_next;
         dwarfstring_destructor(&curl->dl_string);
         curl->dl_next = 0;
-        free(curl);
+        _dwarf_free(curl);
     }
 }
 
@@ -729,7 +730,7 @@ _dwarf_construct_linkedto_path(
         /*  Make a final null pointer in the pointer array. */
         pointerarraysize += sizeof(void *);
         totalareasize = pointerarraysize + sumstringlengths +8;
-        resultfullstring = (char **)malloc(totalareasize);
+        resultfullstring = (char **)_dwarf_alloc(totalareasize);
         setstrindex = pointerarraysize;
         if (!resultfullstring) {
             dwarfstring_list_destructor(&base_dwlist);
@@ -1074,7 +1075,7 @@ dwarf_add_debuglink_global_path(Dwarf_Debug dbg,
     CHECK_DBG(dbg,error,"dwarf_add_debuglink_global_path()");
     glpath_count_in = dbg->de_gnu_global_path_count;
     glpath_count_out = glpath_count_in+1;
-    glpaths = (char **)malloc(sizeof(char *)*
+    glpaths = (char **)_dwarf_alloc(sizeof(char *)*
         glpath_count_out);
     if (!glpaths) {
         _dwarf_error(dbg,error,DW_DLE_ALLOC_FAIL);
@@ -1086,11 +1087,11 @@ dwarf_add_debuglink_global_path(Dwarf_Debug dbg,
     }
     path1 = strdup(pathname);
     if (!path1) {
-        free(glpaths);
+        _dwarf_free(glpaths);
         _dwarf_error(dbg,error,DW_DLE_ALLOC_FAIL);
         return DW_DLV_ERROR;
     }
-    free(dbg->de_gnu_global_paths);
+    _dwarf_free(dbg->de_gnu_global_paths);
     glpaths[glpath_count_in] = path1;
     dbg->de_gnu_global_paths = (const char **)glpaths;
     dbg->de_gnu_global_path_count = glpath_count_out;

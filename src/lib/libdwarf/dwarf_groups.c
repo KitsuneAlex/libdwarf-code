@@ -42,6 +42,7 @@
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_util.h"
@@ -138,14 +139,14 @@ _dwarf_insert_in_group_map(Dwarf_Debug dbg,
     }
     entry2 = dwarf_tsearch(entry3,&grp->gd_map,grp_compare_function);
     if (!entry2) {
-        free(entry3);
+        _dwarf_free(entry3);
         _dwarf_error(dbg, error, DW_DLE_GROUP_MAP_ALLOC);
         return DW_DLV_ERROR;
     } else {
         struct Dwarf_Group_Map_Entry_s *re = 0;
         re = *(struct Dwarf_Group_Map_Entry_s **)entry2;
         if (re != entry3) {
-            free(entry3);
+            _dwarf_free(entry3);
             _dwarf_error(dbg, error, DW_DLE_GROUP_MAP_DUPLICATE);
             return DW_DLV_ERROR;
         } else {
@@ -303,7 +304,7 @@ dwarf_sec_group_map(Dwarf_Debug dbg,
         group_numbers_array[i] = temp_map_data[i].group;
         sec_names_array[i] = temp_map_data[i].name;
     }
-    free(temp_map_data);
+    _dwarf_free(temp_map_data);
     map_reccount = 0;
     temp_map_data = 0;
     return DW_DLV_OK;
@@ -388,7 +389,7 @@ static void
 _dwarf_grp_destroy_free_node(void*nodep)
 {
     struct Dwarf_Group_Map_Entry_s * enp = nodep;
-    free(enp);
+    _dwarf_free(enp);
     return;
 }
 

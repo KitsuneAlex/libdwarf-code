@@ -118,9 +118,9 @@ struct Dwarf_Error_s _dwarf_failsafe_error = {
 /*  Use system memory allocator as default
     memory allocator. */
 static struct Dwarf_Allocator_s _dwarf_allocator = {
-    malloc,
-    realloc,
-    free
+    (Dwarf_Allocator_Alloc_Callback)&malloc,
+    (Dwarf_Allocator_Realloc_Callback)&realloc,
+    &free
 };
 
 /*  Defined March 28th 2024. Allows a caller to
@@ -146,7 +146,7 @@ const Dwarf_Allocator* dwarf_get_allocator()
 /*  Defined March 28th 2024. Internal function for
     allocating heap memory.
     Declarations in dwarf_alloc_private.h. */
-void* dwarf_alloc(const Dwarf_Unsigned size)
+void* _dwarf_alloc(const Dwarf_Unsigned size)
 {
     return _dwarf_allocator.alloc_callback(size);
 }
@@ -154,7 +154,7 @@ void* dwarf_alloc(const Dwarf_Unsigned size)
 /*  Defined March 28th 2024. Internal function for
     reallocating heap memory.
     Declarations in dwarf_alloc_private.h. */
-void* dwarf_realloc(void* memory, const Dwarf_Unsigned size)
+void* _dwarf_realloc(void* memory, const Dwarf_Unsigned size)
 {
     return _dwarf_allocator.realloc_callback(memory, size);
 }
@@ -162,7 +162,7 @@ void* dwarf_realloc(void* memory, const Dwarf_Unsigned size)
 /*  Defined March 28th 2024. Internal function for
     freeing heap memory.
     Declarations in dwarf_alloc_private.h. */
-void dwarf_free(void* memory)
+void _dwarf_free(void* memory)
 {
     _dwarf_allocator.free_callback(memory);
 }
@@ -199,7 +199,7 @@ _dwarf_error_destructor(void *m)
     fflush(stdout);
 #endif /* DEBUG_ALLOC */
     dwarfstring_destructor(erm);
-    free(erm);
+    _dwarf_free(erm);
     er->er_msg = 0;
     return;
 }
@@ -265,7 +265,7 @@ dw_empty_errlist_item(Dwarf_Error e_in)
                 continue;
             }
             _dwarf_error_destructor(e);
-            free(mallocaddr);
+            _dwarf_free(mallocaddr);
         }
         staticerrlist[i] = 0;
     }
@@ -637,7 +637,7 @@ tdestroy_free_node(void *nodep)
     if (alloc_instance_basics[type].specialdestructor) {
         alloc_instance_basics[type].specialdestructor(m);
     }
-    free(malloc_addr);
+    _dwarf_free(malloc_addr);
 }
 
 /*  The sort of hash table entries result in very simple
@@ -718,7 +718,7 @@ _dwarf_get_alloc(Dwarf_Debug dbg,
             sizeof(Dwarf_Addr) : sizeof(Dwarf_Off));
     }
     size += DW_RESERVE;
-    alloc_mem = malloc(size);
+    alloc_mem = _dwarf_alloc(size);
     if (!alloc_mem) {
         return NULL;
     }
@@ -1085,7 +1085,7 @@ dwarf_dealloc(Dwarf_Debug dbg,
     r->rd_dbg  = (void *)(uintptr_t)0xfeadbeef;
     r->rd_length = 0;
     r->rd_type = 0;
-    free(malloc_addr);
+    _dwarf_free(malloc_addr);
     return;
 }
 
@@ -1098,7 +1098,7 @@ _dwarf_get_debug(Dwarf_Unsigned filesize)
 {
     Dwarf_Debug dbg;
 
-    dbg = (Dwarf_Debug) malloc(sizeof(struct Dwarf_Debug_s));
+    dbg = (Dwarf_Debug) _dwarf_alloc(sizeof(struct Dwarf_Debug_s));
     if (!dbg) {
         return NULL;
     }
@@ -1129,7 +1129,7 @@ static void
 malloc_section_free(struct Dwarf_Section_s * sec)
 {
     if (sec->dss_data_was_malloc) {
-        free(sec->dss_data);
+        _dwarf_free(sec->dss_data);
     }
     sec->dss_data = 0;
     sec->dss_data_was_malloc = 0;
@@ -1153,7 +1153,7 @@ freecontextlist(Dwarf_Debug dbg, Dwarf_Debug_InfoTypes dis)
         context->cc_next = 0;
         /*  See also  local_dealloc_cu_context() in
             dwarf_die_deliv.c */
-        free(hash_table);
+        _dwarf_free(hash_table);
         context->cc_abbrev_hash_table = 0;
         dwarf_dealloc(dbg, context, DW_DLA_CU_CONTEXT);
     }
@@ -1234,7 +1234,7 @@ _dwarf_free_all_of_one_debug(Dwarf_Debug dbg)
     _dwarf_dealloc_loclists_context(dbg);
     if (dbg->de_printf_callback.dp_buffer &&
         !dbg->de_printf_callback.dp_buffer_user_provided ) {
-        free(dbg->de_printf_callback.dp_buffer);
+        _dwarf_free(dbg->de_printf_callback.dp_buffer);
     }
 
     _dwarf_destroy_group_map(dbg);
@@ -1255,17 +1255,17 @@ _dwarf_free_all_of_one_debug(Dwarf_Debug dbg)
             _dwarf_tied_destroy_free_node);
         dbg->de_tied_data.td_tied_search = 0;
     }
-    free((void *)dbg->de_path);
+    _dwarf_free((void *)dbg->de_path);
     dbg->de_path = 0;
     for (g = 0; g < dbg->de_gnu_global_path_count; ++g) {
-        free((char *)dbg->de_gnu_global_paths[g]);
+        _dwarf_free((char *)dbg->de_gnu_global_paths[g]);
         dbg->de_gnu_global_paths[g] = 0;
     }
-    free((void*)dbg->de_gnu_global_paths);
+    _dwarf_free((void*)dbg->de_gnu_global_paths);
     dbg->de_gnu_global_paths = 0;
     dbg->de_gnu_global_path_count = 0;
     memset(dbg, 0, sizeof(*dbg)); /* Prevent accidental use later. */
-    free(dbg);
+    _dwarf_free(dbg);
     return DW_DLV_OK;
 }
 /*  A special case: we have no dbg, no alloc header etc.
@@ -1287,7 +1287,7 @@ _dwarf_special_no_dbg_error_malloc(void)
     char *mem = 0;
 
     len = sizeof(struct Dwarf_Error_s) + DW_RESERVE;
-    mem = (char *)malloc((size_t)len);
+    mem = (char *)_dwarf_alloc((size_t)len);
     if (!mem) {
         return 0;
     }

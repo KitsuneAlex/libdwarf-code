@@ -40,6 +40,7 @@
 #include "dwarf_util.h"
 #include "dwarf_opaque.h"
 #include "dwarf_error.h"
+#include "dwarf_alloc_private.h"
 
 /*  Returns DW_DLV_OK DW_DLV_NO_ENTRY or DW_DLV_ERROR
     crc32 used for debuglink crc calculation.
@@ -117,7 +118,7 @@ dwarf_crc32 (Dwarf_Debug dbg,unsigned char *crcbuf,
             "to start fails");
         return DW_DLV_ERROR;
     }
-    readbuf = (unsigned char *)malloc(readlenu);
+    readbuf = (unsigned char *)_dwarf_alloc(readlenu);
     if (!readbuf) {
         _dwarf_error_string(dbg,error,DW_DLE_ALLOC_FAIL,
             "DW_DLE_ALLOC_FAIL: dwarf_crc32 read buffer"
@@ -132,7 +133,7 @@ dwarf_crc32 (Dwarf_Debug dbg,unsigned char *crcbuf,
         if (res != DW_DLV_OK) {
             _dwarf_error_string(dbg,error,DW_DLE_READ_ERROR,
                 "DW_DLE_READ_ERROR: dwarf_crc32 read fails ");
-            free((unsigned char*)readbuf);
+            _dwarf_free((unsigned char*)readbuf);
             return DW_DLV_ERROR;
         }
         /*  Call the public API function so it gets tested too. */
@@ -143,7 +144,7 @@ dwarf_crc32 (Dwarf_Debug dbg,unsigned char *crcbuf,
         size_left -= readlenu;
     }
     /*  endianness issues?  */
-    free((unsigned char*)readbuf);
+    _dwarf_free((unsigned char*)readbuf);
     memcpy(crcbuf,(void *)&tcrc,4);
     return DW_DLV_OK;
 }

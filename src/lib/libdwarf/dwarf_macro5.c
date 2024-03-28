@@ -38,6 +38,7 @@
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_safe_strcpy.h"
 #include "dwarf_opaque.h"
@@ -712,7 +713,7 @@ construct_from_dir_and_name(const char *dir,
 
     /* Allow for NUL char and added /  */
     truelen = strlen(dir) + strlen(name) + 1 +1;
-    final = (char *)malloc(truelen);
+    final = (char *)_dwarf_alloc(truelen);
     if (!final) {
         return NULL;
     }
@@ -1091,11 +1092,11 @@ dealloc_macro_srcfiles(char ** srcfiles,
     }
     for (i = 0; i < srcfiles_count; ++i) {
         if (srcfiles[i]) {
-            free(srcfiles[i]);
+            _dwarf_free(srcfiles[i]);
             srcfiles[i] = 0;
         }
     }
-    free(srcfiles);
+    _dwarf_free(srcfiles);
 }
 
 /*  This makes the macro context safe from
@@ -1654,11 +1655,11 @@ _dwarf_macro_destructor(void *m)
     dealloc_macro_srcfiles(mc->mc_srcfiles, mc->mc_srcfiles_count);
     mc->mc_srcfiles = 0;
     mc->mc_srcfiles_count = 0;
-    free((void *)mc->mc_file_path);
+    _dwarf_free((void *)mc->mc_file_path);
     mc->mc_file_path = 0;
-    free(mc->mc_ops);
+    _dwarf_free(mc->mc_ops);
     mc->mc_ops = 0;
-    free(mc->mc_opcode_forms);
+    _dwarf_free(mc->mc_opcode_forms);
     mc->mc_opcode_forms = 0;
     memset(mc,0,sizeof(*mc));
     /*  Just a recognizable sentinel.

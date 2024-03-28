@@ -41,6 +41,7 @@
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_string.h"
@@ -57,7 +58,7 @@ free_allocated_ranges( struct ranges_entry *base)
     struct ranges_entry *next = 0;
     for ( cur = base ; cur ; cur = next ) {
         next = cur->next;
-        free(cur);
+        _dwarf_free(cur);
     }
 }
 
@@ -271,7 +272,7 @@ int dwarf_get_ranges_b(Dwarf_Debug dbg,
             return DW_DLV_ERROR;
         }
         if ((rangeptr + (2*address_size)) > section_end) {
-            free(re);
+            _dwarf_free(re);
             free_allocated_ranges(base);
             _dwarf_error_string(dbg, error,
                 DW_DLE_DEBUG_RANGES_OFFSET_BAD,
@@ -285,7 +286,7 @@ int dwarf_get_ranges_b(Dwarf_Debug dbg,
         res = read_unaligned_addr_check(localdbg,&re->cur.dwr_addr1,
             rangeptr, address_size,error,section_end);
         if (res != DW_DLV_OK) {
-            free(re);
+            _dwarf_free(re);
             free_allocated_ranges(base);
             return res;
         }
@@ -293,7 +294,7 @@ int dwarf_get_ranges_b(Dwarf_Debug dbg,
         res = read_unaligned_addr_check(localdbg,&re->cur.dwr_addr2,
             rangeptr, address_size,error,section_end);
         if (res != DW_DLV_OK) {
-            free(re);
+            _dwarf_free(re);
             free_allocated_ranges(base);
             return res;
         }

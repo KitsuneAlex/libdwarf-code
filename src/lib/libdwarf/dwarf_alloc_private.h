@@ -37,14 +37,14 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*  Defined March 28th 2024. Internal function for
     allocating heap memory. */
-void* dwarf_alloc(Dwarf_Unsigned size);
+void* _dwarf_alloc(Dwarf_Unsigned size);
 
 /*  Defined March 28th 2024. Internal function for
     reallocating heap memory. */
-void* dwarf_realloc(void* memory, Dwarf_Unsigned size);
+void* _dwarf_realloc(void* memory, Dwarf_Unsigned size);
 
 /*  Defined March 28th 2024. Internal function for
     freeing heap memory. */
-void dwarf_free(void* memory);
+void _dwarf_free(void* memory);
 
 #endif

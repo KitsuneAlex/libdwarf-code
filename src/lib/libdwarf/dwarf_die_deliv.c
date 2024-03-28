@@ -49,6 +49,7 @@
 #include "dwarf_safe_strcpy.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_str_offsets.h"
@@ -660,7 +661,7 @@ local_dealloc_cu_context(Dwarf_Debug dbg,
         _dwarf_free_abbrev_hash_table_contents(hash_table,
             FALSE);
         hash_table->tb_entries = 0;
-        free(hash_table);
+        _dwarf_free(hash_table);
         context->cc_abbrev_hash_table = 0;
     }
     dwarf_dealloc(dbg, context, DW_DLA_CU_CONTEXT);

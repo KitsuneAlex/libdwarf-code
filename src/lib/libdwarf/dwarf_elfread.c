@@ -69,6 +69,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_error.h" /* for _dwarf_error() declaration */
@@ -227,7 +228,7 @@ elf_load_nolibelf_section (void *obj, Dwarf_Unsigned section_index,
             return DW_DLV_ERROR;
         }
 
-        sp->gh_content = malloc((size_t)sp->gh_size);
+        sp->gh_content = _dwarf_alloc((size_t)sp->gh_size);
         if (!sp->gh_content) {
             *error = DW_DLE_ALLOC_FAIL;
             return DW_DLV_ERROR;
@@ -247,7 +248,7 @@ elf_load_nolibelf_section (void *obj, Dwarf_Unsigned section_index,
                 read_size,
                 elf->f_filesize, error);
             if (res != DW_DLV_OK) {
-                free(sp->gh_content);
+                _dwarf_free(sp->gh_content);
                 sp->gh_content = 0;
                 return res;
             }
@@ -538,36 +539,36 @@ _dwarf_destruct_elf_nlaccess(
     Dwarf_Unsigned i = 0;
 
     ep = (dwarf_elf_object_access_internals_t *)aip->ai_object;
-    free(ep->f_ehdr);
+    _dwarf_free(ep->f_ehdr);
     shp = ep->f_shdr;
     shcount = ep->f_loc_shdr.g_count;
     for (i = 0; i < shcount; ++i,++shp) {
-        free(shp->gh_rels);
+        _dwarf_free(shp->gh_rels);
         shp->gh_rels = 0;
-        free(shp->gh_content);
+        _dwarf_free(shp->gh_content);
         shp->gh_content = 0;
-        free(shp->gh_sht_group_array);
+        _dwarf_free(shp->gh_sht_group_array);
         shp->gh_sht_group_array = 0;
         shp->gh_sht_group_array_count = 0;
     }
-    free(ep->f_shdr);
+    _dwarf_free(ep->f_shdr);
     ep->f_loc_shdr.g_count = 0;
-    free(ep->f_phdr);
-    free(ep->f_elf_shstrings_data);
-    free(ep->f_dynamic);
-    free(ep->f_symtab_sect_strings);
-    free(ep->f_dynsym_sect_strings);
-    free(ep->f_symtab);
-    free(ep->f_dynsym);
+    _dwarf_free(ep->f_phdr);
+    _dwarf_free(ep->f_elf_shstrings_data);
+    _dwarf_free(ep->f_dynamic);
+    _dwarf_free(ep->f_symtab_sect_strings);
+    _dwarf_free(ep->f_dynsym_sect_strings);
+    _dwarf_free(ep->f_symtab);
+    _dwarf_free(ep->f_dynsym);
 
     /* if TRUE close f_fd on destruct.*/
     if (ep->f_destruct_close_fd) {
         _dwarf_closer(ep->f_fd);
     }
     ep->f_ident[0] = 'X';
-    free(ep->f_path);
-    free(ep);
-    free(aip);
+    _dwarf_free(ep->f_path);
+    _dwarf_free(ep);
+    _dwarf_free(aip);
 }
 
 int
@@ -647,9 +648,9 @@ _dwarf_elf_object_access_internals_init(
     /*  Must malloc as _dwarf_destruct_elf_access()
         forces that due to other uses. */
     localdoas = (struct Dwarf_Obj_Access_Interface_a_s *)
-        malloc(sizeof(struct Dwarf_Obj_Access_Interface_a_s));
+        _dwarf_alloc(sizeof(struct Dwarf_Obj_Access_Interface_a_s));
     if (!localdoas) {
-        free(internals);
+        _dwarf_free(internals);
         *errcode = DW_DLE_ALLOC_FAIL;
         return DW_DLV_ERROR;
     }
@@ -754,7 +755,7 @@ _dwarf_elf_object_access_internals_init(
             return res;
         }
     }
-    free(localdoas);
+    _dwarf_free(localdoas);
     localdoas = 0;
     return DW_DLV_OK;
 }
@@ -774,7 +775,7 @@ _dwarf_elf_object_access_init(
     dwarf_elf_object_access_internals_t *internals = 0;
     Dwarf_Obj_Access_Interface_a *intfc = 0;
 
-    internals = malloc(sizeof(dwarf_elf_object_access_internals_t));
+    internals = _dwarf_alloc(sizeof(dwarf_elf_object_access_internals_t));
     if (!internals) {
         *localerrnum = DW_DLE_ALLOC_FAIL;
         /* Impossible case, we hope. Give up. */
@@ -789,10 +790,10 @@ _dwarf_elf_object_access_init(
         return res;
     }
 
-    intfc = malloc(sizeof(Dwarf_Obj_Access_Interface_a));
+    intfc = _dwarf_alloc(sizeof(Dwarf_Obj_Access_Interface_a));
     if (!intfc) {
         /* Impossible case, we hope. Give up. */
-        free(internals);
+        _dwarf_free(internals);
         *localerrnum = DW_DLE_ALLOC_FAIL;
         return DW_DLV_ERROR;
     }

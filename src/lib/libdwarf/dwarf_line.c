@@ -47,6 +47,7 @@
 #include "dwarf_safe_strcpy.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_line.h"
@@ -2130,7 +2131,7 @@ delete_line_context_itself(Dwarf_Line_Context context)
     while (fe) {
         Dwarf_File_Entry fenext = fe->fi_next;
         fe->fi_next = 0;
-        free(fe);
+        _dwarf_free(fe);
         fe = fenext;
     }
     context->lc_file_entries = 0;
@@ -2138,15 +2139,15 @@ delete_line_context_itself(Dwarf_Line_Context context)
     context->lc_file_entry_baseindex = 0;
     context->lc_file_entry_endindex = 0;
     if (context->lc_subprogs) {
-        free(context->lc_subprogs);
+        _dwarf_free(context->lc_subprogs);
         context->lc_subprogs = 0;
     }
-    free(context->lc_directory_format_values);
+    _dwarf_free(context->lc_directory_format_values);
     context->lc_directory_format_values = 0;
-    free(context->lc_file_format_values);
+    _dwarf_free(context->lc_file_format_values);
     context->lc_file_format_values = 0;
     if (context->lc_include_directories) {
-        free(context->lc_include_directories);
+        _dwarf_free(context->lc_include_directories);
         context->lc_include_directories = 0;
     }
     context->lc_magic = 0xdead;
@@ -2624,7 +2625,7 @@ _dwarf_line_context_destructor(void *m)
         return;
     }
     if (line_context->lc_include_directories) {
-        free(line_context->lc_include_directories);
+        _dwarf_free(line_context->lc_include_directories);
         line_context->lc_include_directories = 0;
         line_context->lc_include_directories_count = 0;
     }
@@ -2634,7 +2635,7 @@ _dwarf_line_context_destructor(void *m)
             Dwarf_File_Entry t = fe;
             fe = t->fi_next;
             t->fi_next = 0;
-            free(t);
+            _dwarf_free(t);
         }
         line_context->lc_file_entries     = 0;
         line_context->lc_last_entry       = 0;
@@ -2642,13 +2643,13 @@ _dwarf_line_context_destructor(void *m)
         line_context->lc_file_entry_baseindex   = 0;
         line_context->lc_file_entry_endindex    = 0;
     }
-    free(line_context->lc_directory_format_values);
+    _dwarf_free(line_context->lc_directory_format_values);
     line_context->lc_directory_format_values = 0;
-    free(line_context->lc_file_format_values);
+    _dwarf_free(line_context->lc_file_format_values);
     line_context->lc_file_format_values = 0;
 
     if (line_context->lc_subprogs) {
-        free(line_context->lc_subprogs);
+        _dwarf_free(line_context->lc_subprogs);
         line_context->lc_subprogs = 0;
         line_context->lc_subprogs_count = 0;
     }

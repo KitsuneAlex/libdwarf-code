@@ -64,6 +64,7 @@
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_safe_strcpy.h"
 #include "dwarf_opaque.h"
@@ -236,7 +237,7 @@ _dwarf_harmless_init(struct Dwarf_Harmless_s *dhp,unsigned size)
         if (!newstr) {
             dhp->dh_maxcount = 0;
             /* Let it leak, the leak is a constrained amount. */
-            free(dhp->dh_errors);
+            _dwarf_free(dhp->dh_errors);
             dhp->dh_errors = 0;
             return;
         }
@@ -253,10 +254,10 @@ _dwarf_harmless_cleanout(struct Dwarf_Harmless_s *dhp)
         return;
     }
     for (i = 0; i < dhp->dh_maxcount; ++i) {
-        free(dhp->dh_errors[i]);
+        _dwarf_free(dhp->dh_errors[i]);
         dhp->dh_errors[i] = 0;
     }
-    free(dhp->dh_errors);
+    _dwarf_free(dhp->dh_errors);
     dhp->dh_errors = 0;
     dhp->dh_maxcount = 0;
 }

@@ -38,6 +38,7 @@
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
@@ -192,13 +193,13 @@ int dwarf_discr_list(Dwarf_Debug dbg,
             returned to us will be identical either way. */
         FALSE, 0, &arraycount,error);
     if (res != DW_DLV_OK) {
-        free(dscblockp);
+        _dwarf_free(dscblockp);
         return res;
     }
 
     h = (Dwarf_Dsc_Head)_dwarf_get_alloc(dbg,DW_DLA_DSC_HEAD,1);
     if (!h) {
-        free(dscblockp);
+        _dwarf_free(dscblockp);
         _dwarf_error(dbg, error, DW_DLE_ALLOC_FAIL);
         return DW_DLV_ERROR;
     }
@@ -320,9 +321,9 @@ _dwarf_dsc_destructor(void *m)
 {
     Dwarf_Dsc_Head h = (Dwarf_Dsc_Head) m;
 
-    free(h->dsh_array);
+    _dwarf_free(h->dsh_array);
     h->dsh_array = 0;
-    free(h->dsh_block);
+    _dwarf_free(h->dsh_block);
     h->dsh_block = 0;
     h->dsh_count = 0;
 }

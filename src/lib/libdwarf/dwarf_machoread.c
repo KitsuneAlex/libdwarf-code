@@ -65,6 +65,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_safe_strcpy.h"
 #include "dwarf_opaque.h"
@@ -220,7 +221,7 @@ macho_load_section (void *obj, Dwarf_Unsigned section_index,
             return DW_DLV_ERROR;
         }
 
-        sp->loaded_data = malloc((size_t)sp->size);
+        sp->loaded_data = _dwarf_alloc((size_t)sp->size);
         if (!sp->loaded_data) {
             *error = DW_DLE_ALLOC_FAIL;
             return DW_DLV_ERROR;
@@ -230,7 +231,7 @@ macho_load_section (void *obj, Dwarf_Unsigned section_index,
             sp->size,
             (inner+macho->mo_filesize), error);
         if (res != DW_DLV_OK) {
-            free(sp->loaded_data);
+            _dwarf_free(sp->loaded_data);
             sp->loaded_data = 0;
             return res;
         }
@@ -251,28 +252,28 @@ _dwarf_destruct_macho_internals(
         mp->mo_fd = -1;
     }
     if (mp->mo_commands){
-        free(mp->mo_commands);
+        _dwarf_free(mp->mo_commands);
         mp->mo_commands = 0;
     }
     if (mp->mo_segment_commands){
-        free(mp->mo_segment_commands);
+        _dwarf_free(mp->mo_segment_commands);
         mp->mo_segment_commands = 0;
     }
-    free((char *)mp->mo_path);
+    _dwarf_free((char *)mp->mo_path);
     if (mp->mo_dwarf_sections) {
         struct generic_macho_section *sp = 0;
 
         sp = mp->mo_dwarf_sections;
         for ( i=0; i < mp->mo_dwarf_sectioncount; ++i,++sp) {
             if (sp->loaded_data) {
-                free(sp->loaded_data);
+                _dwarf_free(sp->loaded_data);
                 sp->loaded_data = 0;
             }
         }
-        free(mp->mo_dwarf_sections);
+        _dwarf_free(mp->mo_dwarf_sections);
         mp->mo_dwarf_sections = 0;
     }
-    free(mp);
+    _dwarf_free(mp);
     return;
 }
 void
@@ -287,7 +288,7 @@ _dwarf_destruct_macho_access(
     mp = (dwarf_macho_object_access_internals_t *)aip->ai_object;
     _dwarf_destruct_macho_internals(mp);
     aip->ai_object = 0;
-    free(aip);
+    _dwarf_free(aip);
     return;
 }
 
@@ -544,7 +545,7 @@ _dwarf_macho_load_segment_commands(
             ++msp;
         } else { /* fall through, not a command of interest */ }
         if (res != DW_DLV_OK) {
-            free(mfp->mo_segment_commands);
+            _dwarf_free(mfp->mo_segment_commands);
             mfp->mo_segment_commands = 0;
             return res;
         }
@@ -815,7 +816,7 @@ _dwarf_load_macho_commands(
             inner+curoff, sizeof(mc),
             inner+mfp->mo_filesize, errcode);
         if (res != DW_DLV_OK) {
-            free(mfp->mo_commands);
+            _dwarf_free(mfp->mo_commands);
             mfp->mo_commands = 0;
             return res;
         }
@@ -826,7 +827,7 @@ _dwarf_load_macho_commands(
         if (mcp->cmdsize > mfp->mo_filesize ||
             curoff > mfp->mo_filesize) {
             /* corrupt object */
-            free(mfp->mo_commands);
+            _dwarf_free(mfp->mo_commands);
             mfp->mo_commands = 0;
             *errcode = DW_DLE_FILE_OFFSET_BAD;
             return DW_DLV_ERROR;
@@ -838,13 +839,13 @@ _dwarf_load_macho_commands(
     mfp->mo_segment_count = segment_command_count;
     res = _dwarf_macho_load_segment_commands(mfp,errcode);
     if (res != DW_DLV_OK) {
-        free(mfp->mo_commands);
+        _dwarf_free(mfp->mo_commands);
         mfp->mo_commands = 0;
         return res;
     }
     res = _dwarf_macho_load_dwarf_sections(mfp,errcode);
     if (res != DW_DLV_OK) {
-        free(mfp->mo_commands);
+        _dwarf_free(mfp->mo_commands);
         mfp->mo_commands = 0;
     }
     return res;
@@ -1101,7 +1102,7 @@ _dwarf_macho_object_access_init(
     dwarf_macho_object_access_internals_t *internals = 0;
     Dwarf_Obj_Access_Interface_a *intfc = 0;
 
-    internals = malloc(
+    internals = _dwarf_alloc(
         sizeof(dwarf_macho_object_access_internals_t));
     if (!internals) {
         *localerrnum = DW_DLE_ALLOC_FAIL;
@@ -1120,7 +1121,7 @@ _dwarf_macho_object_access_init(
         _dwarf_destruct_macho_internals(internals);
         return DW_DLV_ERROR;
     }
-    intfc = malloc(sizeof(Dwarf_Obj_Access_Interface_a));
+    intfc = _dwarf_alloc(sizeof(Dwarf_Obj_Access_Interface_a));
     if (!intfc) {
         /* Impossible case, we hope. Give up. */
         _dwarf_destruct_macho_internals(internals);
@@ -1303,15 +1304,15 @@ _dwarf_object_detector_universal_head_fd(
             sizeof(struct fat_arch));
         if (!fa) {
             *errcode = DW_DLE_ALLOC_FAIL;
-            free(duhd.au_arches);
+            _dwarf_free(duhd.au_arches);
             duhd.au_arches = 0;
-            free(fa);
+            _dwarf_free(fa);
             return DW_DLV_ERROR;
         }
         if (sizeof(fh)+duhd.au_count*sizeof(*fa) >= dw_filesize) {
-            free(duhd.au_arches);
+            _dwarf_free(duhd.au_arches);
             duhd.au_arches = 0;
-            free(fa);
+            _dwarf_free(fa);
             *errcode = DW_DLE_FILE_OFFSET_BAD;
             return DW_DLV_ERROR;
         }
@@ -1319,17 +1320,17 @@ _dwarf_object_detector_universal_head_fd(
             duhd.au_count*sizeof(*fa),
             dw_filesize,errcode);
         if (res != DW_DLV_OK) {
-            free(duhd.au_arches);
+            _dwarf_free(duhd.au_arches);
             duhd.au_arches = 0;
-            free(fa);
+            _dwarf_free(fa);
             return res;
         }
         res = fill_in_uni_arch_32(fa,&duhd,word_swap,
             errcode);
-        free(fa);
+        _dwarf_free(fa);
         fa = 0;
         if (res != DW_DLV_OK) {
-            free(duhd.au_arches);
+            _dwarf_free(duhd.au_arches);
             duhd.au_arches = 0;
             return res;
         }
@@ -1339,14 +1340,14 @@ _dwarf_object_detector_universal_head_fd(
             sizeof(struct fat_arch_64));
         if (!fa) {
             *errcode = DW_DLE_ALLOC_FAIL;
-            free(duhd.au_arches);
+            _dwarf_free(duhd.au_arches);
             duhd.au_arches = 0;
             return DW_DLV_ERROR;
         }
         if (sizeof(fh)+duhd.au_count*sizeof(*fa) >= dw_filesize) {
-            free(duhd.au_arches);
+            _dwarf_free(duhd.au_arches);
             duhd.au_arches = 0;
-            free(fa);
+            _dwarf_free(fa);
             *errcode = DW_DLE_FILE_OFFSET_BAD ;
             return DW_DLV_ERROR;
         }
@@ -1354,25 +1355,25 @@ _dwarf_object_detector_universal_head_fd(
             duhd.au_count*sizeof(fa),
             dw_filesize,errcode);
         if (res == DW_DLV_ERROR) {
-            free(duhd.au_arches);
+            _dwarf_free(duhd.au_arches);
             duhd.au_arches = 0;
-            free(fa);
+            _dwarf_free(fa);
             return res;
         }
         res = fill_in_uni_arch_64(fa,&duhd,word_swap,
             errcode);
-        free(fa);
+        _dwarf_free(fa);
         fa = 0;
         if (res != DW_DLV_OK) {
-            free(duhd.au_arches);
+            _dwarf_free(duhd.au_arches);
             duhd.au_arches = 0;
             return res;
         }
     }
 
-    duhdp = malloc(sizeof(*duhdp));
+    duhdp = _dwarf_alloc(sizeof(*duhdp));
     if (!duhdp) {
-        free(duhd.au_arches);
+        _dwarf_free(duhd.au_arches);
         duhd.au_arches = 0;
         *errcode = DW_DLE_ALLOC_FAIL;
         return res;
@@ -1433,7 +1434,7 @@ _dwarf_dealloc_universal_head(Dwarf_Universal_Head dw_head)
     if (!dw_head) {
         return;
     }
-    free(dw_head->au_arches);
+    _dwarf_free(dw_head->au_arches);
     dw_head->au_arches = 0;
-    free(dw_head);
+    _dwarf_free(dw_head);
 }

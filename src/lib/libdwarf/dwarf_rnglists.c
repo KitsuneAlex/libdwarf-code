@@ -43,6 +43,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dwarf.h"
 #include "libdwarf.h"
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
@@ -110,7 +111,7 @@ free_rnglists_chain(Dwarf_Debug dbg, Dwarf_Chain head)
     for ( ;cur; cur = next) {
         next = cur->ch_next;
         if (cur->ch_item) {
-            free(cur->ch_item);
+            _dwarf_free(cur->ch_item);
             cur->ch_item = 0;
             dwarf_dealloc(dbg,cur,DW_DLA_CHAIN);
         }
@@ -490,7 +491,7 @@ internal_load_rnglists_contexts(Dwarf_Debug dbg,
         Dwarf_Rnglists_Context newcontext = 0;
 
         /* sizeof the context struct, not sizeof a pointer */
-        newcontext = malloc(sizeof(*newcontext));
+        newcontext = _dwarf_alloc(sizeof(*newcontext));
         if (!newcontext) {
             free_rnglists_chain(dbg,head_chain);
             _dwarf_error_string(dbg,error,
@@ -507,7 +508,7 @@ internal_load_rnglists_contexts(Dwarf_Debug dbg,
             data,end_data,offset,
             newcontext,&nextoffset,error);
         if (res == DW_DLV_ERROR) {
-            free(newcontext);
+            _dwarf_free(newcontext);
             newcontext =  0;
             free_rnglists_chain(dbg,head_chain);
             return res;
@@ -519,7 +520,7 @@ internal_load_rnglists_contexts(Dwarf_Debug dbg,
             _dwarf_error_string(dbg, error, DW_DLE_ALLOC_FAIL,
                 "DW_DLE_ALLOC_FAIL: allocating Rnglists_Context"
                 " chain entry");
-            free(newcontext);
+            _dwarf_free(newcontext);
             newcontext =  0;
             free_rnglists_chain(dbg,head_chain);
             return DW_DLV_ERROR;
@@ -531,7 +532,7 @@ internal_load_rnglists_contexts(Dwarf_Debug dbg,
         offset = nextoffset;
         newcontext = 0;
     }
-    fullarray= (Dwarf_Rnglists_Context *)malloc(
+    fullarray= (Dwarf_Rnglists_Context *)_dwarf_alloc(
         chainlength *sizeof(Dwarf_Rnglists_Context /*pointer*/));
     if (!fullarray) {
         free_rnglists_chain(dbg,head_chain);
@@ -628,10 +629,10 @@ _dwarf_dealloc_rnglists_context(Dwarf_Debug dbg)
         con->rc_offsets_array = 0;
         con->rc_magic = 0;
         con->rc_offset_entry_count = 0;
-        free(con);
+        _dwarf_free(con);
         rngcon[i] = 0;
     }
-    free(dbg->de_rnglists_context);
+    _dwarf_free(dbg->de_rnglists_context);
     dbg->de_rnglists_context = 0;
     dbg->de_rnglists_context_count = 0;
 }
@@ -1059,7 +1060,7 @@ alloc_rle_and_append_to_list(Dwarf_Debug dbg,
 {
     Dwarf_Rnglists_Entry e = 0;
 
-    e = malloc(sizeof(struct Dwarf_Rnglists_Entry_s));
+    e = _dwarf_alloc(sizeof(struct Dwarf_Rnglists_Entry_s));
     if (!e) {
         _dwarf_error_string(dbg, error, DW_DLE_ALLOC_FAIL,
             "DW_DLE_ALLOC_FAIL: Out of memory in "
@@ -1257,7 +1258,7 @@ build_array_of_rle(Dwarf_Debug dbg,
         Dwarf_Unsigned i = 0;
 
         /*  Creating an array of pointers. */
-        array = (Dwarf_Rnglists_Entry*)malloc(
+        array = (Dwarf_Rnglists_Entry*)_dwarf_alloc(
             rctx->rh_count *sizeof(Dwarf_Rnglists_Entry));
         if (!array) {
             _dwarf_error_string(dbg, error, DW_DLE_ALLOC_FAIL,
@@ -1519,7 +1520,7 @@ _dwarf_free_rnglists_head(Dwarf_Rnglists_Head head)
 
         for ( ; cur ; cur = next) {
             next = cur->rle_next;
-            free(cur);
+            _dwarf_free(cur);
         }
         head->rh_first = 0;
         head->rh_last = 0;
@@ -1531,9 +1532,9 @@ _dwarf_free_rnglists_head(Dwarf_Rnglists_Head head)
 
         /* Deal with the array form. */
         for ( ; i < head->rh_count; ++i) {
-            free(head->rh_rnglists[i]);
+            _dwarf_free(head->rh_rnglists[i]);
         }
-        free(head->rh_rnglists);
+        _dwarf_free(head->rh_rnglists);
         head->rh_rnglists = 0;
     }
 }

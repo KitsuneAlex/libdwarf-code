@@ -46,6 +46,7 @@
 #include "dwarf_safe_strcpy.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_global.h"
@@ -142,7 +143,7 @@ free_temp_abbrevs( struct Dwarf_D_Abbrev_s * firstab)
 
         nxtab = curab->da_next;
         curab->da_next = 0;
-        free(curab);
+        _dwarf_free(curab);
         curab = nxtab;
     }
 }
@@ -292,7 +293,7 @@ fill_in_abbrevs_table(Dwarf_Dnames_Head dn,
             /*  da_next no longer means anything */
             dn->dn_abbrev_instances[ct] = *tmpa;
             dn->dn_abbrev_instances[ct].da_next = 0;
-            free(tmpa);
+            _dwarf_free(tmpa);
             tmpa = tmpb;
         }
         tmpa = 0;
@@ -746,7 +747,7 @@ read_a_name_table_header(Dwarf_Dnames_Head dn,
     *next_offset = dn->dn_next_set_offset;
     res = fill_in_abbrevs_table(dn,error);
     if (res != DW_DLV_OK) {
-        free(dn->dn_augmentation_string);
+        _dwarf_free(dn->dn_augmentation_string);
         dn->dn_augmentation_string = 0;
         return res;
     }
@@ -870,11 +871,11 @@ _dwarf_internal_dwarf_dealloc_dnames(Dwarf_Dnames_Head dn)
     if (!dn || dn->dn_magic != DWARF_DNAMES_MAGIC) {
         return;
     }
-    free(dn->dn_augmentation_string);
+    _dwarf_free(dn->dn_augmentation_string);
     dn->dn_augmentation_string = 0;
-    free(dn->dn_bucket_array);
+    _dwarf_free(dn->dn_bucket_array);
     dn->dn_bucket_array = 0;
-    free(dn->dn_abbrev_instances);
+    _dwarf_free(dn->dn_abbrev_instances);
     dn->dn_abbrev_instances = 0;
     dn->dn_abbrev_instance_count = 0;
     dn->dn_magic = 0;

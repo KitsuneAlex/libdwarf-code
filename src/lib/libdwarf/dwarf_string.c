@@ -50,6 +50,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h> /* memcpy() strlen() */
 
 #include "libdwarf_private.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_string.h"
 
 /*  m must be a string, like  "DWARFSTRINGERR..."  for this to work */
@@ -87,7 +88,7 @@ dwarfstring_add_to(struct dwarfstring_s *g,size_t newlen)
         malloclen = minimumnewlen;
     }
     /*  Not zeroing the new buffer block. */
-    b = malloc(malloclen);
+    b = _dwarf_alloc(malloclen);
     if (!b) {
         return FALSE;
     }
@@ -96,7 +97,7 @@ dwarfstring_add_to(struct dwarfstring_s *g,size_t newlen)
         memcpy(b,g->s_data,lastpos);
     }
     if (g->s_malloc) {
-        free(g->s_data);
+        _dwarf_free(g->s_data);
         g->s_data = 0;
     }
     g->s_data = b;
@@ -161,7 +162,7 @@ void
 dwarfstring_destructor(struct dwarfstring_s *g)
 {
     if (g->s_malloc) {
-        free(g->s_data);
+        _dwarf_free(g->s_data);
         g->s_data   = 0;
         g->s_malloc = 0;
     }

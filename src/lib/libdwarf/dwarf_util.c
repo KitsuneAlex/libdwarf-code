@@ -46,6 +46,7 @@
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_abbrev.h"
@@ -789,7 +790,7 @@ printf("debugging: initial size %u\n",HT_DEFAULT_TABLE_SIZE);
             calloc(newht->tb_table_entry_count,
                 sizeof(Dwarf_Abbrev_List));
         if (!newht->tb_entries) {
-            free(newht);
+            _dwarf_free(newht);
             *highest_known_code =
                 context->cc_highest_known_code;
             return DW_DLV_NO_ENTRY;
@@ -801,7 +802,7 @@ printf("debugging: initial size %u\n",HT_DEFAULT_TABLE_SIZE);
             TRUE /* keep abbrev content */);
         /*  Now overwrite the existing table pointer
             the new, newly valid, pointer. */
-        free(context->cc_abbrev_hash_table);
+        _dwarf_free(context->cc_abbrev_hash_table);
         context->cc_abbrev_hash_table = newht;
         hash_table_base = context->cc_abbrev_hash_table;
     } /* Else is ok as is */
@@ -1256,16 +1257,16 @@ _dwarf_free_abbrev_hash_table_contents(Dwarf_Hash_Table hash_table,
                     max_refs = abbrev->abl_reference_count;
                 }
 #endif
-                free(abbrev->abl_attr);
+                _dwarf_free(abbrev->abl_attr);
                 abbrev->abl_attr = 0;
-                free(abbrev->abl_form);
+                _dwarf_free(abbrev->abl_form);
                 abbrev->abl_form = 0;
-                free(abbrev->abl_implicit_const);
+                _dwarf_free(abbrev->abl_implicit_const);
                 abbrev->abl_implicit_const = 0;
                 nextabbrev = abbrev->abl_next;
                 abbrev->abl_next = 0;
                 /*  dealloc single list entry */
-                free(abbrev);
+                _dwarf_free(abbrev);
                 abbrev = 0;
 #ifdef TESTINGHASHTAB
                 ++listcount;
@@ -1281,7 +1282,7 @@ printf("debugging: max ref count of any abbrev %lu, \n",
 (unsigned long)max_refs);
 #endif
     /* Frees all the pointers at once: an array. */
-    free(hash_table->tb_entries);
+    _dwarf_free(hash_table->tb_entries);
     hash_table->tb_entries = 0;
 }
 
@@ -1327,7 +1328,7 @@ dwarf_register_printf_callback( Dwarf_Debug dbg,
         }else {
             /*  Switch from our control of buffer to user
                 control.  */
-            free(oldval.dp_buffer);
+            _dwarf_free(oldval.dp_buffer);
             oldval.dp_buffer = 0;
             dbg->de_printf_callback = *newvalues;
         }

@@ -48,6 +48,7 @@
 #include "dwarf_opaque.h"
 #include "dwarf_tsearch.h"
 #include "dwarf_tied_decls.h"
+#include "dwarf_alloc_private.h"
 
 void
 _dwarf_dumpsig(const char *msg, Dwarf_Sig8 *sig,int lineno)
@@ -114,7 +115,7 @@ void
 _dwarf_tied_destroy_free_node(void*nodep)
 {
     struct Dwarf_Tied_Entry_s * enp = nodep;
-    free(enp);
+    _dwarf_free(enp);
     return;
 }
 
@@ -199,7 +200,7 @@ _dwarf_loop_reading_debug_info_for_cu(
                 &tieddbg->de_tied_data.td_tied_search,
                 _dwarf_tied_compare_function);
             if (!retval) {
-                free(entry);
+                _dwarf_free(entry);
                 /* FAILED might be out of memory.*/
                 return DW_DLV_NO_ENTRY;
             } else {
@@ -210,7 +211,7 @@ _dwarf_loop_reading_debug_info_for_cu(
                     return DW_DLV_OK;
                 } else {
                     /*  found existing, no add */
-                    free(entry);
+                    _dwarf_free(entry);
                     return DW_DLV_OK;
                 }
             }

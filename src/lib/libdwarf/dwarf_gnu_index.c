@@ -52,6 +52,7 @@
 #include "dwarf_base_types.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_util.h"
 #include "dwarf_gnu_index.h"
@@ -548,7 +549,7 @@ fill_in_entries(Dwarf_Gnu_Index_Head head,
     res = _dwarf_count_entries_in_block(gib,
         entryarray,for_gnu_pubnames,error);
     if (res != DW_DLV_OK) {
-        free(entryarray);
+        _dwarf_free(entryarray);
         return res;
     }
     gib->ib_entryarray = entryarray;
@@ -642,12 +643,12 @@ _dwarf_free_gnu_index_head_content(Dwarf_Gnu_Index_Head head)
 
         for ( ; i < head->gi_blockcount; ++i,block++) {
             if (block->ib_entryarray) {
-                free(block->ib_entryarray);
+                _dwarf_free(block->ib_entryarray);
                 block->ib_entryarray = 0;
             }
             block->ib_entry_count = 0;
         }
-        free(head->gi_blockarray);
+        _dwarf_free(head->gi_blockarray);
         head->gi_blockarray = 0;
         head->gi_blockcount = 0;
     }

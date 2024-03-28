@@ -75,6 +75,7 @@ dwarf_init_path_dl(path true_path and globals, dbg1
 #include "dwarf_util.h"
 #include "dwarf_opaque.h"
 #include "dwarf_alloc.h"
+#include "dwarf_alloc_private.h"
 #include "dwarf_error.h"
 #include "dwarf_object_detector.h"
 
@@ -498,7 +499,7 @@ dwarf_finish(Dwarf_Debug dbg)
         _dwarf_closer(dbg->de_fd);
         dbg->de_owns_fd = FALSE;
     }
-    free((void *)dbg->de_path);
+    _dwarf_free((void *)dbg->de_path);
     dbg->de_path = 0;
     /*  dwarf_object_finish() also frees de_path,
         but that is safe because we set it to zero
