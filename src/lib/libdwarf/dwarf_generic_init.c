@@ -136,7 +136,7 @@ final_common_settings(Dwarf_Debug dbg,
 {
     int res = 0;
 
-    dbg->de_path = strdup(file_path);
+    dbg->de_path = _dwarf_strdup(file_path);
     dbg->de_fd = fd;
     dbg->de_owns_fd = TRUE;
     dbg->de_path_source = lpath_source;

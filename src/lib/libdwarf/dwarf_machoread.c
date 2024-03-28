@@ -893,7 +893,7 @@ _dwarf_macho_setup(int fd,
         return res;
     }
     intfc = binary_interface->ai_object;
-    intfc->mo_path = strdup(true_path);
+    intfc->mo_path = _dwarf_strdup(true_path);
     (*dbg)->de_obj_flags = intfc->mo_flags;
     (*dbg)->de_obj_machine = intfc->mo_machine;
     (*dbg)->de_universalbinary_index = universalnumber;

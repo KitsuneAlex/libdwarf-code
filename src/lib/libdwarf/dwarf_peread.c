@@ -497,8 +497,8 @@ _dwarf_pe_load_dwarf_section_headers(
         return DW_DLV_ERROR;
     }
     sec_outp = pep->pe_sectionptr;
-    sec_outp->name = strdup("");
-    sec_outp->dwarfsectname = strdup("");
+    sec_outp->name = _dwarf_strdup("");
+    sec_outp->dwarfsectname = _dwarf_strdup("");
     sec_outp++;
     for ( ;  i < input_count;
         ++i, cur_offset += section_hdr_size, sec_outp++) {
@@ -525,7 +525,7 @@ _dwarf_pe_load_dwarf_section_headers(
             filesect.Name,
             IMAGE_SIZEOF_SHORT_NAME);
         /* Have NUL terminator now. */
-        sec_outp->name = strdup(safe_name);
+        sec_outp->name = _dwarf_strdup(safe_name);
         res = pe_section_name_get(pep,
             safe_name,(unsigned int)strlen(safe_name),
             &expname,errcode);
@@ -533,9 +533,9 @@ _dwarf_pe_load_dwarf_section_headers(
             return res;
         }
         if (expname) {
-            sec_outp->dwarfsectname = strdup(expname);
+            sec_outp->dwarfsectname = _dwarf_strdup(expname);
         } else {
-            sec_outp->dwarfsectname = strdup("<sec name missing>");
+            sec_outp->dwarfsectname = _dwarf_strdup("<sec name missing>");
         }
         if ( !sec_outp->name || !sec_outp->dwarfsectname) {
             *errcode = DW_DLE_ALLOC_FAIL;
@@ -856,7 +856,7 @@ _dwarf_pe_setup(int fd,
     pep = binary_interface->ai_object;
     (*dbg)->de_obj_flags = pep->pe_flags;
     (*dbg)->de_obj_machine = pep->pe_machine;
-    pep->pe_path = strdup(true_path);
+    pep->pe_path = _dwarf_strdup(true_path);
     return res;
 }
 

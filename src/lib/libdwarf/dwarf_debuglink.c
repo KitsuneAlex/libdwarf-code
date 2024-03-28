@@ -986,7 +986,7 @@ dwarf_gnu_debuglink(Dwarf_Debug dbg,
     }
     if (!pdebuglink && !pbuildid) {
         if (dbg->de_path) {
-            *debuglink_fullpath_returned = strdup(dbg->de_path);
+            *debuglink_fullpath_returned = _dwarf_strdup(dbg->de_path);
             *debuglink_fullpath_length_returned =
             (unsigned)strlen(dbg->de_path);
         } else {
@@ -1044,7 +1044,7 @@ dwarf_gnu_debuglink(Dwarf_Debug dbg,
         }
         if (dwarfstring_strlen(&debuglink_fullpath)) {
             *debuglink_fullpath_returned =
-                strdup(dwarfstring_string(&debuglink_fullpath));
+                _dwarf_strdup(dwarfstring_string(&debuglink_fullpath));
             *debuglink_fullpath_length_returned =
                 (unsigned)dwarfstring_strlen(&debuglink_fullpath);
         }
@@ -1085,7 +1085,7 @@ dwarf_add_debuglink_global_path(Dwarf_Debug dbg,
         memcpy(glpaths, dbg->de_gnu_global_paths,
             sizeof(char *)*glpath_count_in);
     }
-    path1 = strdup(pathname);
+    path1 = _dwarf_strdup(pathname);
     if (!path1) {
         _dwarf_free(glpaths);
         _dwarf_error(dbg,error,DW_DLE_ALLOC_FAIL);

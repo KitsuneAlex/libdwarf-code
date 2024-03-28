@@ -47,4 +47,8 @@ void* _dwarf_realloc(void* memory, Dwarf_Unsigned size);
     freeing heap memory. */
 void _dwarf_free(void* memory);
 
+/*  Defined March 28th 2024. Internal function for
+    duplicating a heap strings. */
+char* _dwarf_strdup(const char* value);
+
 #endif

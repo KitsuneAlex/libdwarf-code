@@ -167,6 +167,22 @@ void _dwarf_free(void* memory)
     _dwarf_allocator.free_callback(memory);
 }
 
+/*  Defined March 28th 2024. Internal function for
+    duplicating a heap strings because strdup() is
+    not a C standard function and it always uses the
+    system memory allocator. */
+char* _dwarf_strdup(const char* value)
+{
+    if(value == NULL)
+    {
+        return NULL;
+    }
+    const Dwarf_Unsigned size = strlen(value) + 1;
+    char* result = _dwarf_alloc(size);
+    memcpy(result, value, size);
+    return result;
+}
+
 /*  If non-zero (the default) de_alloc_tree (see dwarf_alloc.c)
     is used normally.  If zero then dwarf allocations
     are not tracked by libdwarf and dwarf_finish() cannot
