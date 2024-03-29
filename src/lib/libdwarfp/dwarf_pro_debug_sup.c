@@ -39,6 +39,7 @@
 #include "dwarf_pro_opaque.h"
 #include "dwarf_pro_error.h"
 #include "dwarf_pro_alloc.h"
+#include "dwarf_pro_alloc_private.h"
 
 int
 dwarf_add_debug_sup(Dwarf_P_Debug dbg,
@@ -51,11 +52,11 @@ dwarf_add_debug_sup(Dwarf_P_Debug dbg,
 {
     dbg->de_debug_sup.ds_version = version;
     dbg->de_debug_sup.ds_is_supplementary = is_supplementary;
-    dbg->de_debug_sup.ds_filename = strdup(filename);
+    dbg->de_debug_sup.ds_filename = _dwarf_strdup(filename);
     dbg->de_debug_sup.ds_checksum_len = checksum_len;
-    dbg->de_debug_sup.ds_checksum = malloc(checksum_len);
+    dbg->de_debug_sup.ds_checksum = _dwarf_p_alloc(checksum_len);
     if (!dbg->de_debug_sup.ds_checksum) {
-        free(dbg->de_debug_sup.ds_filename);
+        _dwarf_p_free(dbg->de_debug_sup.ds_filename);
         dbg->de_debug_sup.ds_filename = 0;
         dbg->de_debug_sup.ds_version = 0;
         dbg->de_debug_sup.ds_checksum_len = 0;

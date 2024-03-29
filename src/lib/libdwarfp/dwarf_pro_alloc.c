@@ -45,6 +45,7 @@
 #include "dwarf_pro_incl.h"
 #include "dwarf_pro_opaque.h"
 #include "dwarf_pro_alloc.h"
+#include "dwarf_pro_alloc_private.h"
 #include "dwarf_tsearch.h"
 
 /*  When each block is allocated, there is a two-word structure
@@ -71,6 +72,74 @@
 #define BLOCK_TO_LIST(blk) \
     ((memory_list_t*) (((char*)blk) - sizeof(memory_list_t)))
 
+/*  Use system memory allocator as default
+    memory allocator. */
+static struct Dwarf_P_Allocator_s _dwarf_p_allocator = {
+    (Dwarf_P_Allocator_Alloc_Callback)&malloc,
+    (Dwarf_P_Allocator_Realloc_Callback)&realloc,
+    &free
+};
+
+/*  Defined March 28th 2024. Allows a caller to
+    set the memory allocator used by libdwarf internally. */
+int dwarf_p_set_allocator(const Dwarf_P_Allocator* allocator)
+{
+    if(allocator == NULL)
+    {
+        return -1;
+    }
+    _dwarf_allocator = *allocator;
+    return 0;
+}
+
+/*  Defined March 28th 2024. Allows a caller to
+    retrieve a pointer to the memory allocator
+    used by libdwarf internally. */
+const Dwarf_P_Allocator* dwarf_p_get_allocator()
+{
+    return &_dwarf_p_allocator;
+}
+
+/*  Defined March 28th 2024. Internal function for
+    allocating heap memory.
+    Declarations in dwarf_alloc_private.h. */
+void* _dwarf_p_alloc(const Dwarf_Unsigned size)
+{
+    return _dwarf_p_allocator.alloc_callback(size);
+}
+
+/*  Defined March 28th 2024. Internal function for
+    reallocating heap memory.
+    Declarations in dwarf_alloc_private.h. */
+void* _dwarf_p_realloc(void* memory, const Dwarf_Unsigned size)
+{
+    return _dwarf_p_allocator.realloc_callback(memory, size);
+}
+
+/*  Defined March 28th 2024. Internal function for
+    freeing heap memory.
+    Declarations in dwarf_alloc_private.h. */
+void _dwarf_p_free(void* memory)
+{
+    _dwarf_p_allocator.free_callback(memory);
+}
+
+/*  Defined March 28th 2024. Internal function for
+    duplicating a heap strings because strdup() is
+    not a C standard function and it always uses the
+    system memory allocator. */
+char* _dwarf_p_strdup(const char* value)
+{
+    if(value == NULL)
+    {
+        return NULL;
+    }
+    const Dwarf_Unsigned size = strlen(value) + 1;
+    char* result = _dwarf_p_alloc(size);
+    memcpy(result, value, size);
+    return result;
+}
+
 /*
   dbg should be NULL only when allocating dbg itself.  In that
   case we initialize it to an empty circular doubly-linked list.
@@ -86,7 +155,7 @@ _dwarf_p_get_alloc(Dwarf_P_Debug dbg, Dwarf_Unsigned size)
 
     /*  Alloc control struct and data block together
         for performance reasons */
-    lp = (memory_list_t *) malloc(size + sizeof(memory_list_t));
+    lp = (memory_list_t *) _dwarf_p_alloc(size + sizeof(memory_list_t));
     if (lp == NULL) {
         /* should throw an error */
         return NULL;
@@ -144,13 +213,13 @@ _dwarf_p_dealloc(Dwarf_Small * ptr) /* ARGSUSED */
         lp->next->prev = lp->prev;
         lp->prev = lp->next = 0;
     }
-    free((void*)lp);
+    _dwarf_p_free((void*)lp);
 }
 
 static void
 _dwarf_str_hashtab_freenode(void * nodep)
 {
-    free(nodep);
+    _dwarf_p_free(nodep);
 }
 
 /*
@@ -182,5 +251,5 @@ _dwarf_p_dealloc_all(Dwarf_P_Debug dbg)
         _dwarf_str_hashtab_freenode);
     dwarf_tdestroy(dbg->de_debug_line_str_hashtab,
         _dwarf_str_hashtab_freenode);
-    free((void *)base_dbglp);
+    _dwarf_p_free((void *)base_dbglp);
 }

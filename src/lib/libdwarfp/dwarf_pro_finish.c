@@ -40,6 +40,7 @@
 #include "dwarf_pro_opaque.h"
 #include "dwarf_pro_error.h"
 #include "dwarf_pro_alloc.h"
+#include "dwarf_pro_alloc_private.h"
 
 /*  This routine deallocates all memory, and does some
     finishing up.  New September 2016. */
@@ -51,10 +52,10 @@ dwarf_producer_finish_a(Dwarf_P_Debug dbg, Dwarf_Error * error)
     }
 
     /* this frees all blocks, then frees dbg. */
-    free(dbg->de_debug_sup.ds_filename);
+    _dwarf_p_free(dbg->de_debug_sup.ds_filename);
     dbg->de_debug_sup.ds_filename = 0;
     dbg->de_debug_sup.ds_version = 0;
-    free(dbg->de_debug_sup.ds_checksum);
+    _dwarf_p_free(dbg->de_debug_sup.ds_checksum);
     dbg->de_debug_sup.ds_checksum = 0;
     dbg->de_debug_sup.ds_checksum_len = 0;
     _dwarf_p_dealloc_all(dbg);

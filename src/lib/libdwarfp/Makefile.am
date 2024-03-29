@@ -15,6 +15,7 @@ $(top_srcdir)/src/lib/libdwarf/dwarf_string.c \
 libdwarfp.h \
 dwarf_pro_alloc.c \
 dwarf_pro_alloc.h \
+dwarf_pro_alloc_private.h \
 dwarf_pro_arange.c \
 dwarf_pro_arange.h \
 dwarf_pro_debug_sup.c \

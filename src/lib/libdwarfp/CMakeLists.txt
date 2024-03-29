@@ -14,7 +14,7 @@ dwarf_pro_weaks.c)
 
 set_source_group(HEADERS "Header Files"
 libdwarfp.h
-dwarf_pro_alloc.h dwarf_pro_arange.h dwarf_pro_die.h
+dwarf_pro_alloc.h dwarf_pro_alloc_private.h dwarf_pro_arange.h dwarf_pro_die.h
 dwarf_pro_error.h dwarf_pro_expr.h dwarf_pro_frame.h
 dwarf_pro_incl.h dwarf_pro_line.h
 dwarf_pro_log_extra_flag_strings.c

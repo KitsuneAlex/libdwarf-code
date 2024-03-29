@@ -48,6 +48,7 @@
 #include "dwarf_pro_error.h"
 #include "dwarf_pro_util.h"
 #include "dwarf_pro_alloc.h"
+#include "dwarf_pro_alloc_private.h"
 #include "dwarf_pro_die.h"
 #include "dwarf_pro_section.h"
 #include "dwarf_tsearch.h"
@@ -318,7 +319,7 @@ _dwarf_debug_str_compare_func(const void *l,const void *r)
 static  void
 debug_str_entry_free_func(void *m)
 {
-    free(m);
+    _dwarf_p_free(m);
 }
 
 static int
@@ -416,7 +417,7 @@ insert_debug_str_data_string(Dwarf_P_Debug dbg,
             return DW_DLV_ERROR;
         }
         memcpy(newbuf,sd->ds_data,sd->ds_nbytes);
-        free(sd->ds_data);
+        _dwarf_p_free(sd->ds_data);
         sd->ds_data = newbuf;
         sd->ds_orig_alloc = updated_length;
         newbuf = 0;

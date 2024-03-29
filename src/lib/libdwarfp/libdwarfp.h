@@ -163,6 +163,32 @@ struct Dwarf_P_String_Attr_s {
     Dwarf_Unsigned        sa_nbytes;
 };
 
+/*! @typedef Dwarf_Allocator_Alloc_Callback
+    A pointer to a function used by libdwarfp to allocate its memory.
+ */
+typedef void*(*Dwarf_P_Allocator_Alloc_Callback)(Dwarf_Unsigned size);
+
+/*! @typedef Dwarf_Allocator_Realloc_Callback
+    A pointer to a function used by libdwarfp to reallocate its memory.
+ */
+typedef void*(*Dwarf_P_Allocator_Realloc_Callback)(void* memory, Dwarf_Unsigned size);
+
+/*! @typedef Dwarf_Allocator_Free_Callback
+    A pointer to a function used by libdwarfp to free its memory.
+ */
+typedef void(*Dwarf_P_Allocator_Free_Callback)(void* memory);
+
+/*! @typedef Dwarf_Allocator
+    This struct provides a way for applications
+    to define a custom memory allocator that is
+    used by libdwarfp internally.
+ */
+typedef struct Dwarf_P_Allocator_s {
+    Dwarf_Allocator_Alloc_Callback alloc_callback;
+    Dwarf_Allocator_Realloc_Callback realloc_callback;
+    Dwarf_Allocator_Free_Callback free_callback;
+} Dwarf_P_Allocator;
+
 /* DWARF Producer Interface */
 /*  New form June, 2011. Adds user_data argument. */
 typedef int (*Dwarf_Callback_Func)(

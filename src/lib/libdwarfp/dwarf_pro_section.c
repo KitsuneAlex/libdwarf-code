@@ -44,6 +44,7 @@
 #include "dwarf_pro_error.h"
 #include "dwarf_pro_util.h"
 #include "dwarf_pro_alloc.h"
+#include "dwarf_pro_alloc_private.h"
 #include "dwarf_pro_section.h"
 #include "dwarf_pro_line.h"
 #include "dwarf_pro_frame.h"
@@ -2663,7 +2664,7 @@ _dwarf_pro_getabbrev(Dwarf_P_Debug dbg,
         int res = 0;
 
         sortab = (struct Dwarf_Sort_Abbrev_s *)
-            malloc(sizeof(struct Dwarf_Sort_Abbrev_s)*attrcount);
+            _dwarf_p_alloc(sizeof(struct Dwarf_Sort_Abbrev_s)*attrcount);
         if (!sortab) {
             DWARF_P_DBG_ERROR(dbg, DW_DLE_ABBREV_ALLOC, DW_DLV_ERROR);
         }
@@ -2682,7 +2683,7 @@ _dwarf_pro_getabbrev(Dwarf_P_Debug dbg,
             k = 0;
             res = verify_ab_no_dups(sortab,attrcount);
             if (res != DW_DLV_OK) {
-                free(sortab);
+                _dwarf_p_free(sortab);
                 DWARF_P_DBG_ERROR(dbg,DW_DLE_DUP_ATTR_ON_DIE,
                     DW_DLV_ERROR);
             }
@@ -2692,7 +2693,7 @@ _dwarf_pro_getabbrev(Dwarf_P_Debug dbg,
             forms[k] = ap->dsa_form;
             implicits[k] = ap->dsa_implicitvalue;
         }
-        free(sortab);
+        _dwarf_p_free(sortab);
     }
 
     curabbrev = (Dwarf_P_Abbrev)
@@ -2957,7 +2958,7 @@ sort_die_attrs(Dwarf_P_Debug dbg,Dwarf_P_Die die,
         return DW_DLV_OK;
     }
     sortab = (struct Dwarf_Sort_Abbrev_s *)
-        malloc(sizeof(struct Dwarf_Sort_Abbrev_s)*attrcount);
+        _dwarf_p_alloc(sizeof(struct Dwarf_Sort_Abbrev_s)*attrcount);
     if (!sortab) {
         DWARF_P_DBG_ERROR(dbg, DW_DLE_ABBREV_ALLOC, DW_DLV_ERROR);
     }
@@ -2973,7 +2974,7 @@ sort_die_attrs(Dwarf_P_Debug dbg,Dwarf_P_Die die,
         abcompare);
     res = verify_ab_no_dups(sortab,attrcount);
     if (res != DW_DLV_OK) {
-        free(sortab);
+        _dwarf_p_free(sortab);
         DWARF_P_DBG_ERROR(dbg, DW_DLE_DUP_ATTR_ON_DIE, DW_DLV_ERROR);
     }
     ap = sortab;
@@ -2993,7 +2994,7 @@ sort_die_attrs(Dwarf_P_Debug dbg,Dwarf_P_Die die,
     /*  Now replace the list with the same pointers
         but in order sorted by attribute. */
     die->di_attrs = sorted_attrlist;
-    free(sortab);
+    _dwarf_p_free(sortab);
     return DW_DLV_OK;
 }
 
